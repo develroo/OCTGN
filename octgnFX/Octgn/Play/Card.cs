@@ -58,10 +58,20 @@ namespace Octgn.Play
             }
         }
 
-        internal static void Reset()
+        internal static void Reset(bool soft = false)
         {
             lock (All)
-                All.Clear();
+            {
+                if (!soft)
+                    All.Clear();
+                else
+                {
+                    foreach (var a in All)
+                    {
+                        a.Value._firstGroup.Add(a.Value);
+                    }
+                }
+            }
         }
 
         internal static void Remove(Card card)
@@ -198,6 +208,7 @@ namespace Octgn.Play
         //private CardDef _definition;
         private bool _faceUp;
         private Group _group;
+        private Group _firstGroup;
         private Color? _highlight;
         private Color? _filter;
         //private bool _isAlternateImage;
@@ -303,6 +314,10 @@ namespace Octgn.Play
                     // Remove the card from peeking lists
                     foreach (List<Card> lookedCards in _group.LookedAt.Values)
                         lookedCards.Remove(this);
+                }
+                else
+                {
+                    _firstGroup = value;
                 }
                 _group = value;
                 // Clear the target status

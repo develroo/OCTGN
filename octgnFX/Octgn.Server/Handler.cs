@@ -856,5 +856,12 @@ namespace Octgn.Server
         {
             _broadcaster.ResetCardProperties(card, player);
         }
+
+        public void SoftResetReq()
+        {
+            _turnNumber = 0;
+            _turnStopPlayers.Clear();
+            _broadcaster.SoftReset(State.Instance.GetPlayer(_sender).Id);
+        }
     }
 }

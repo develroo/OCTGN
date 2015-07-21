@@ -394,7 +394,7 @@ namespace Octgn
                                      Program.GameEngine.Definition.Id, Program.GameEngine.Definition.Version, this.Password);
         }
 
-        public void Reset()
+        public void Reset(bool soft = false)
         {
             TurnNumber = 0;
             TurnPlayer = null;
@@ -410,8 +410,9 @@ namespace Octgn
                     p.GlobalVariables[g.Name] = g.DefaultValue;
             }
             Table.Reset();
-            Card.Reset();
-            CardIdentity.Reset();
+            Card.Reset(soft);
+            if(!soft)
+                CardIdentity.Reset();
             Selection.Clear();
 
             foreach (var varDef in Definition.Variables.Where(v => v.Global && v.Reset))
@@ -424,6 +425,9 @@ namespace Octgn
             EventProxy.OnGameStart_3_1_0_0();
             EventProxy.OnGameStart_3_1_0_1();
             EventProxy.OnGameStarted_3_1_0_2();
+            throw new NotImplementedException("Should fire load deck here if soft and has cards, so that the game can do deck load automation");
+            //EventProxy.OnLoadDeck_3_1_0_0();
+            //EventProxy.OnLoadDeck_3_1_0_1();
         }
 
         public void End()

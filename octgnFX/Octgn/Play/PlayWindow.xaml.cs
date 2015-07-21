@@ -642,6 +642,15 @@ namespace Octgn.Play
             }
         }
 
+        private void SoftResetGame(object sender, RoutedEventArgs e)
+        {
+            if (this.PreGameLobby.Visibility == Visibility.Visible) return;
+            if (MessageBoxResult.Yes == TopMostMessageBox.Show("The current game will end. Are you sure you want to continue?", "Confirmation", MessageBoxButton.YesNo))
+            {
+                Program.Client.Rpc.SoftResetReq();
+            }
+        }
+
         protected void MouseEnteredMenu(object sender, RoutedEventArgs e)
         {
             if (!IsFullScreen) return;

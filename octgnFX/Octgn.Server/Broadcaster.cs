@@ -452,5 +452,11 @@ namespace Octgn.Server
       bin.Filter(card, color);
       Send();
     }
+
+    public void SoftReset(byte player)
+    {
+      bin.SoftReset(player);
+      Send();
+    }
 	}
 }

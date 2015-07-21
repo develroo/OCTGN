@@ -1103,5 +1103,12 @@ namespace Octgn.Networking
             if (player == Player.LocalPlayer) return;
             card.ResetProperties(false);
         }
+
+        public void SoftReset(Player player)
+        {
+            Program.GameEngine.Reset(true);
+            //Program.Trace.TraceEvent(TraceEventType.Information, EventIds.Event | EventIds.PlayerFlag(player), "{0} resets the game.", player);
+            Program.GameMess.System("{0} soft reset the game", player);
+        }
     }
 }

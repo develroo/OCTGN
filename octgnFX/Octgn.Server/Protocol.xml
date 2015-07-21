@@ -522,4 +522,8 @@
     <param name="card" type="Card" />
     <param name="color" type="Color?" />
   </msg>
+  <msg name="SoftResetReq" server="true" />
+  <msg name="SoftReset" client="true" >
+    <param name="player" type="Player" />
+  </msg>
 </protocol>

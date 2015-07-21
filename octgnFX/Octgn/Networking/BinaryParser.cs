@@ -805,6 +805,14 @@ namespace Octgn.Networking
 					handler.Filter(arg0, arg1);
 					break;
 				}
+				case 102:
+				{
+					Player arg0 = Player.Find(reader.ReadByte());
+					if (arg0 == null)
+					{ Debug.WriteLine("[SoftReset] Player not found."); return; }
+					handler.SoftReset(arg0);
+					break;
+				}
 		  default:
 			  Debug.WriteLine("[Client Parser] Unknown message (id =" + method + ")");
 				break;

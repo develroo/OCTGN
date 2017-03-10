@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 
 namespace Octgn.Chat
 {
-    public class ChatServer
+    public class ChatClient
     {
         private static ILog Log = LogManager.GetLogger( System.Reflection.MethodBase.GetCurrentMethod().DeclaringType );
 
         private readonly IBusControl _bus;
 
-        public ChatServer() {
+        public ChatClient() {
             _bus = ConfigureBus();
         }
 
@@ -34,7 +34,13 @@ namespace Octgn.Chat
                         await OnMessage( context.Message );
                     } );
                 } );
-             } );
+            } );
+        }
+
+        public async void Send( Message message ) {
+            message.DateSent = DateTimeOffset.Now;
+            ISendEndpoint endpoint = await _bus.GetSendEndpoint( new Uri( "rabbitmq://octgn.local/event_queue" ) );
+            await endpoint.Send( message );
         }
 
         protected virtual async Task OnMessage( Message message ) {

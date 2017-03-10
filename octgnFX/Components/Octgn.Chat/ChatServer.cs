@@ -1,18 +1,23 @@
 ﻿using Common.Logging;
 using MassTransit;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Octgn.Chat
 {
     public class ChatServer
     {
+        private static int _id = 0;
+        private int Id { get; } = Interlocked.Increment(ref _id);
+
+
         private static ILog Log = LogManager.GetLogger( System.Reflection.MethodBase.GetCurrentMethod().DeclaringType );
 
         private readonly IBusControl _bus;
 
-        public ChatServer() {
-            _bus = ConfigureBus();
+        public ChatServer(string username, string password) {
+            _bus = ConfigureBus(username, password);
         }
 
         public void Start() {
@@ -23,22 +28,22 @@ namespace Octgn.Chat
             _bus?.Stop( TimeSpan.FromSeconds( 30 ) );
         }
 
-        IBusControl ConfigureBus() {
+        IBusControl ConfigureBus(string username, string password) {
             return Bus.Factory.CreateUsingRabbitMq( cfg => {
-                var host = cfg.Host( new Uri( "rabbitmq://octgn.local" ), h => {
-                    h.Username( "" );
-                    h.Password( "" );
+                var host = cfg.Host( new Uri( "rabbitmq://octgn.local/chat" ), h => {
+                    h.Username(username);
+                    h.Password(password);
                 } );
-                cfg.ReceiveEndpoint( host, "event_queue", e => {
+                cfg.ReceiveEndpoint( host, "user_send_queue", e => {
                     e.Handler<Message>( async context => {
-                        await OnMessage( context.Message );
+                        await OnMessage(context.Message );
                     } );
                 } );
              } );
         }
 
         protected virtual async Task OnMessage( Message message ) {
-            await Console.Out.WriteLineAsync( $"{message.From}: {message.MessageText}" );
+            await Console.Out.WriteLineAsync( $"{Id}: {message.From}: {message.MessageText}" );
         }
     }
 }

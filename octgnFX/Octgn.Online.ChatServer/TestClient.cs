@@ -17,6 +17,7 @@ namespace Octgn.Online.ChatService
 
         private void _timer_Elapsed( object sender, System.Timers.ElapsedEventArgs e ) {
             _chat.Send( new Message {
+                From = _chat.Username,
                 To = "Bill",
                 MessageText = "Hey there!"
             } );

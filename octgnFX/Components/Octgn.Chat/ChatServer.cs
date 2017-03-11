@@ -1,6 +1,8 @@
 ﻿using Common.Logging;
 using MassTransit;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,15 +37,24 @@ namespace Octgn.Chat
                     h.Password(password);
                 } );
                 cfg.ReceiveEndpoint( host, "user_send_queue", e => {
-                    e.Handler<Message>( async context => {
-                        await OnMessage(context.Message );
-                    } );
+                    e.Handler<Message>(OnMessage);
+                    e.Handler<Handshake>(OnHandshake);
                 } );
              } );
         }
 
-        protected virtual async Task OnMessage( Message message ) {
-            await Console.Out.WriteLineAsync( $"{Id}: {message.From}: {message.MessageText}" );
+        protected virtual async Task OnMessage( ConsumeContext<Message> context ) {
+            var message = context.Message;
+            string username = message.SessionId;
+
+            await Console.Out.WriteLineAsync( $"{Id}: {username}: {message.MessageText}" );
+        }
+
+        protected virtual async Task OnHandshake( ConsumeContext<Handshake> context ) {
+            var resp = new HandshakeResponse {
+                SessionId = context.Message.Username
+            };
+            await context.RespondAsync(resp);
         }
     }
 }

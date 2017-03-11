@@ -24,13 +24,13 @@ namespace Octgn.Online.ChatService
         }
 
         public bool Start( HostControl hostControl ) {
-            _chat.Start();
+            _chat.Start().Wait(TimeSpan.FromSeconds(10));
             _timer.Start();
             return true;
         }
 
         public bool Stop( HostControl hostControl ) {
-            _chat.Stop();
+            _chat.Stop().Wait(TimeSpan.FromSeconds(5));
             _timer.Stop();
             return true;
         }

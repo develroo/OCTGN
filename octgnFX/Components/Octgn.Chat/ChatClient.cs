@@ -65,12 +65,11 @@ namespace Octgn.Chat
                     h.Username( username );
                     h.Password( password );
                 } );
-                //cfg.ReceiveEndpoint( host, username + "_receive_queue", e => {
-                //    e.Handler<Message>( async context => {
-                //        context.Message.From = context.SourceAddress.GetHashCode().ToString();
-                //        await OnMessage( context.Message );
-                //    } );
-                //} );
+                cfg.ReceiveEndpoint(host, $"user_{username}_receive_queue", e => {
+                    e.Handler<Message>(async context => {
+                        await OnMessage(context.Message);
+                    });
+                });
             } );
         }
 

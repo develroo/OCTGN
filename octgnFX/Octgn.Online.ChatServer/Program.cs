@@ -22,8 +22,8 @@ namespace Octgn.Online.ChatService
         {
             yield return new ChatService("chatservice1", "chatservice1");
             yield return new ChatService("chatservice2", "chatservice2");
-            yield return new TestClient("usera", "usera");
-            yield return new TestClient("userb", "userb");
+            yield return new TestClient("usera", "usera") { To = "userb" };
+            yield return new TestClient("userb", "userb") { To = "usera" };
         }
     }
 

@@ -6,6 +6,7 @@ namespace Octgn.Online.ChatService
 {
     public class TestClient : ServiceControl
     {
+        public string To { get; set; }
         private readonly ChatClient _chat;
         private readonly System.Timers.Timer _timer;
 
@@ -18,7 +19,7 @@ namespace Octgn.Online.ChatService
         private void _timer_Elapsed( object sender, System.Timers.ElapsedEventArgs e ) {
             _chat.Send( new Message {
                 From = _chat.Username,
-                To = "Bill",
+                To = To,
                 MessageText = "Hey there!"
             } );
         }

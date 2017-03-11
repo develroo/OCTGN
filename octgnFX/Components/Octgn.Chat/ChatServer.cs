@@ -46,8 +46,11 @@ namespace Octgn.Chat
         protected virtual async Task OnMessage( ConsumeContext<Message> context ) {
             var message = context.Message;
             string username = message.SessionId;
+            message.From = username;
 
-            await Console.Out.WriteLineAsync( $"{Id}: {username}: {message.MessageText}" );
+            var se = await context.GetSendEndpoint(new Uri($"rabbitmq://octgn.local/chat/user_{message.To}_receive_queue"));
+            message.SessionId = null;
+            await se.Send(message);
         }
 
         protected virtual async Task OnHandshake( ConsumeContext<Handshake> context ) {

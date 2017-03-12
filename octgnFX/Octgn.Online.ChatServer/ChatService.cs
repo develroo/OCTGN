@@ -1,6 +1,7 @@
 ﻿using System;
 using Octgn.Chat;
 using Topshelf;
+using Octgn.Chat.Server;
 
 namespace Octgn.Online.ChatService
 {

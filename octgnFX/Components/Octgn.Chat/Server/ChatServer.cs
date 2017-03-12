@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Octgn.Chat
+namespace Octgn.Chat.Server
 {
     public class ChatServer
     {

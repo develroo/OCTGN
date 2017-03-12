@@ -10,7 +10,7 @@ namespace Octgn.Chat
 {
     public class ChatClient
     {
-        private static ILog Log = LogManager.GetLogger( System.Reflection.MethodBase.GetCurrentMethod().DeclaringType );
+        private static ILog Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public string Username { get; private set; }
         public string Password {
@@ -60,28 +60,36 @@ namespace Octgn.Chat
         }
 
         IBusControl ConfigureBus(string username, string password) {
-            return Bus.Factory.CreateUsingRabbitMq( cfg => {
+            return Bus.Factory.CreateUsingRabbitMq(cfg => {
                 var host = cfg.Host(_rabbitAddress, h => {
-                    h.Username( username );
-                    h.Password( password );
-                } );
+                    h.Username(username);
+                    h.Password(password);
+                });
                 cfg.ReceiveEndpoint(host, $"user_{username}_receive_queue", e => {
                     e.Handler<Message>(async context => {
                         await OnMessage(context.Message);
                     });
                 });
-            } );
+            });
         }
 
-        public async void Send( Message message ) {
-            message.DateSent = DateTimeOffset.Now;
-            message.SessionId = _sessionId;
-            ISendEndpoint endpoint = await _bus.GetSendEndpoint( new Uri("rabbitmq://octgn.local/chat/user_send_queue") );
-            await endpoint.Send( message );
+        public async void Send(string to, string message) {
+            var msg = new Message {
+                To = to,
+                MessageText = message,
+                DateSent = DateTimeOffset.Now,
+                SessionId = _sessionId,
+            };
+            ISendEndpoint endpoint = await _bus.GetSendEndpoint(new Uri("rabbitmq://octgn.local/chat/user_send_queue"));
+            await endpoint.Send(msg);
         }
 
-        protected virtual async Task OnMessage( Message message ) {
-            await Console.Out.WriteLineAsync( $"{message.From}: {message.MessageText}" );
+        public async Task<Room> JoinRoom(string name) {
+            throw new NotImplementedException("Dylan says he's ready");
+        }
+
+        protected virtual async Task OnMessage(Message message) {
+            await Console.Out.WriteLineAsync($"{message.From}: {message.MessageText}");
         }
     }
 }

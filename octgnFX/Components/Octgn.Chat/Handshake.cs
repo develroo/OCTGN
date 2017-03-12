@@ -32,9 +32,4 @@ namespace Octgn.Chat
     {
         public string SessionId { get; set; }
     }
-
-    public class AuthenticatedMessage
-    {
-        public string SessionId { get; set; }
-    }
 }

@@ -38,12 +38,14 @@ namespace Octgn.Chat
         private readonly IBusControl _bus;
         private readonly Uri _rabbitAddress;
         private readonly MessageRequestClient<Handshake, HandshakeResponse> _handshakeRpc;
+        private readonly MessageRequestClient<JoinRoom, JoinRoomResponse> _joinRoomRpc;
         private readonly SecureString _password = new SecureString();
 
         public ChatClient(string username, string password) {
             _rabbitAddress = new Uri("rabbitmq://octgn.local/chat");
             _bus = ConfigureBus(Username = username, Password = password);
             _handshakeRpc = new MessageRequestClient<Handshake, HandshakeResponse>(_bus, new Uri("rabbitmq://octgn.local/chat/user_send_queue"), MaxRpcTimeout);
+            _joinRoomRpc = new MessageRequestClient<JoinRoom, JoinRoomResponse>(_bus, new Uri("rabbitmq://octgn.local/chat/user_send_queue"), MaxRpcTimeout);
         }
 
         public async Task Start(CancellationToken cancel = default(CancellationToken)) {
@@ -66,14 +68,13 @@ namespace Octgn.Chat
                     h.Password(password);
                 });
                 cfg.ReceiveEndpoint(host, $"user_{username}_receive_queue", e => {
-                    e.Handler<Message>(async context => {
-                        await OnMessage(context.Message);
-                    });
+                    e.Handler<GroupMessage>(HandleOnGroupMessage);
+                    e.Handler<Message>(HandleOnMessage);
                 });
             });
         }
 
-        public async void Send(string to, string message) {
+        public async Task Send(string to, string message) {
             var msg = new Message {
                 To = to,
                 MessageText = message,
@@ -84,12 +85,72 @@ namespace Octgn.Chat
             await endpoint.Send(msg);
         }
 
-        public async Task<Room> JoinRoom(string name) {
-            throw new NotImplementedException("Dylan says he's ready");
+        public async Task SendToRoom(string room, string message) {
+            var msg = new GroupMessage {
+                Room = room,
+                MessageText = message,
+                DateSent = DateTimeOffset.Now,
+                SessionId = _sessionId,
+            };
+            ISendEndpoint endpoint = await _bus.GetSendEndpoint(new Uri("rabbitmq://octgn.local/chat/user_send_queue"));
+            await endpoint.Send(msg);
         }
 
-        protected virtual async Task OnMessage(Message message) {
-            await Console.Out.WriteLineAsync($"{message.From}: {message.MessageText}");
+        public async Task<Room> JoinRoom(string name) {
+            for (var count = 0; count < 3; count++) {
+                var result = await _joinRoomRpc.Request(new JoinRoom {
+                    SessionId = _sessionId,
+                    RoomName = name
+                }, CancellationToken.None);
+                switch (result.Result) {
+                    case JoinRoomResponse.ResultType.Ok:
+                    var room = Room.Get(result.Room.Name, result.Room);
+                    room.ChatClient = this;
+                    return room;
+
+                    case JoinRoomResponse.ResultType.ErrorTryAgain:
+                    await Task.Delay(5000);
+                    break;
+
+                    case JoinRoomResponse.ResultType.Unauthorized:
+                    throw new UnauthorizedException();
+
+                    default:
+                    throw new NotImplementedException(result.Result.ToString());
+                }
+            }
+            return null;
         }
+
+        protected virtual async Task HandleOnMessage(ConsumeContext<Message> context) {
+            var message = context.Message;
+            if (message is GroupMessage) throw new InvalidOperationException();
+            OnMessage?.Invoke(this, new OnMessageEventArgs(message));
+        }
+
+        protected virtual async Task HandleOnGroupMessage(ConsumeContext<GroupMessage> context) {
+            var message = context.Message;
+            var room = Room.Get(message.Room);
+            room.ProcessMessage(message);
+        }
+
+        public event EventHandler<OnMessageEventArgs> OnMessage;
+        public class OnMessageEventArgs : EventArgs
+        {
+            public Message Message { get; set; }
+
+            public OnMessageEventArgs() {
+
+            }
+
+            public OnMessageEventArgs(Message message) {
+                Message = message;
+            }
+        }
+    }
+
+    public class UnauthorizedException : Exception
+    {
+
     }
 }
